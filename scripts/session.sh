@@ -8,15 +8,13 @@ current_session=$(tmux display-message -p | sed -e 's/^\[//' -e 's/\].*//')
 if [[ -z "$TMUX_FZF_SESSION_FORMAT" ]]; then
     sessions=$(tmux list-sessions | sed -E "s/$current_session/*$current_session/" | sed -E 's/: .*$//g')
 else
-    # echo "what"
-    # sleep 2
     sessions=$(tmux list-sessions -F "#S: $TMUX_FZF_SESSION_FORMAT" | sed -E "s/$current_session/*$current_session/"  | sed -E 's/: *$//g')
 fi
 # sessions=$(echo $sessions | sed -E 's/\: *$//g')
 
 FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --header='Select an action.'"
 if [[ -z "$1" ]]; then
-    action=$(printf "attach\ndetach\nrename\nkill\n[cancel]" | eval "$TMUX_FZF_BIN $TMUX_FZF_OPTIONS")
+    action=$(printf "attach\ndetach\nrename\nkill\n" | eval "$TMUX_FZF_BIN $SESSION_FZF_OPTIONS")
 else
     action="$1"
 fi
@@ -29,16 +27,16 @@ if [[ "$action" != "detach" ]]; then
         FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --header='---SESSION---'"
     fi
     if [[ "$action" == "attach" ]]; then
-        target_origin=$(printf "%s\n[cancel]" "$sessions" | eval "$TMUX_FZF_BIN $TMUX_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS")
+        target_origin=$(printf "%s\n" "$sessions" | eval "$TMUX_FZF_BIN $SESSION_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS $SESSION_FZF_PREVIEW_FRAME")
     else
-        target_origin=$(printf "[current]\n%s\n[cancel]" "$sessions" | eval "$TMUX_FZF_BIN $TMUX_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS")
+        target_origin=$(printf "[current]\n%s\n" "$sessions" | eval "$TMUX_FZF_BIN $SESSION_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS $SESSION_FZF_PREVIEW_FRAME")
         # target_origin=$(echo "$target_origin" | sed -E "s/\[current\]/$current_session:/")
     fi
 else
     tmux_attached_sessions=$(tmux list-sessions | grep 'attached' | grep -o '^[[:alpha:][:digit:]_-]*:' | sed 's/.$//g')
     sessions=$(echo "$sessions" | grep "^$tmux_attached_sessions")
     FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --header='Select target session(s). Press TAB to mark multiple items.'"
-    target_origin=$(printf "[current]\n%s\n[cancel]" "$sessions" | eval "$TMUX_FZF_BIN $TMUX_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS")
+    target_origin=$(printf "[current]\n%s\n" "$sessions" | eval "$TMUX_FZF_BIN $SESSION_FZF_OPTIONS $TMUX_FZF_PREVIEW_OPTIONS $SESSION_FZF_PREVIEW_FRAME")
     target_origin=$(echo "$target_origin" | sed -E "s/\[current\]/$current_session:/")
 fi
 
